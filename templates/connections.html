@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}INVITE{% endblock %}
+{% block content %}
+
+<h1>ACTIVE CONNECTIONS</h1>
+<table width="100%">
+
+
+{% for connection in connections.results %}
+
+<tr>
+  <td>
+    {{ connection.connection_id}} : {{connection.their_label}} 
+  </td>
+  
+  {% if connection.state == "active" %}
+  <td>
+    <a href="{{ url_for('sendqa',connectionid=connection.connection_id) }}" class="btn btn-primary" role="button">send QA</a>
+    <!-- <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">issue-credential</a> -->
+    <a href="{{ url_for('sendcred',connectionid=connection.connection_id) }}" class="btn btn-primary" role="button" >/issue-credential-2.0/send-offer</a>
+  </td>
+  <td>{{connection.created_at}}</td>
+  {% else %}
+  <td>{{connection.state}} </td>
+  <td>{{connection.created_at}}</td>
+  {% endif %}
+  <td>
+    <!-- <button id="delete-button" data-id="{{connection.connection_id}}" class="btn btn-danger" >DELETE</button> -->
+    <a href="{{ url_for('deleteconnection', connectionid=connection.connection_id) }}" class="btn btn-danger" role="button">REMOVE</a>
+  </td>
+</tr>  
+
+{% endfor %}
+</table>
+
+<hr/>
+<pre><code>{{ connections }}</code></pre>
+
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}INVITE{% endblock %}
+{% block content %}
+
+<h1>ACTIVE CONNECTIONS</h1>
+<table width="100%">
+
+
+{% for question in questions.results %}
+
+<tr>
+  <td>
+    {{question.thread_id}} <br/>- {{ question.connection_id}}
+  </td>
+  <td>{{question.created_at}} </td>
+
+  <td>
+    {{ question.question_text}}<br/>{{question.question_detail}}
+    <!-- <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">issue-credential</a> -->
+  </td>
+  {% if question.state == "answered" %}
+  <td>answer: {{ question.response}} <br/> {{question.updated_at}} </td>
+  {% else %}
+  <td>-not-answered-</td>
+  {% endif %}
+  <td>
+    
+    <a href="{{ url_for('deletequestion', threadid=question.thread_id) }}" class="btn btn-danger" role="button">REMOVE</a>
+  </td>
+</tr>  
+
+{% endfor %}
+</table>
+
+<hr/>
+<pre><code>{{ questions }}</code></pre>
+
+
+{% endblock %}

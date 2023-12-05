@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}invite OOB{% endblock %}
+{% block content %}
+
+MemberPass v0.3.1 /member/{memberid}/createInvitation  <hr/>
+
+# Create MemberPass Invitation
+
+<!-- <form>
+  <div class="row mb-3 form-group">
+    <label for="deviceName">Connection Name</label>
+    <input type="email" class="form-control" id="connectionName" aria-describedby="connection-name-help" placeholder="Bubbaz CU">
+    <small id="emailHelp" class="form-text text-muted">This value will be presented to the Member.</small>
+  </div>
+</form> -->
+
+<button class="btn btn-primary" id="generateQR" type="button" class="btn">Get Invite QR</button>
+<hr/>
+<script>
+  $(document).ready(function() {
+    $('#generateQR').click(function()
+    {
+      // alert("gonna do the thang");
+      $('#qrinvite').attr('src','/invite/qr-memberpass.png');
+      // alert("just did the thang");
+    });
+  });
+  
+
+
+</script>
+<!-- /invite/qr-oob.png -->
+
+<img id="qrinvite" src=""> 
+
+<h3>TODO:</h3>
+<ul>
+  <li>wait until connection is made (webhook????). clear the image out, replace with connection detail.</li>
+
+</ul>
+
+{% endblock %}

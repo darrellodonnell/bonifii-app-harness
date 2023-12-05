@@ -3,12 +3,19 @@ import requests
 import qrcode
 from io import BytesIO
 import json
+from flask_moment import Moment
+from jinja2 import Environment
+
+jinja_env = Environment(extensions=['jinja2_iso8601.ISO8601Extension'])
+
 
 app = Flask(__name__)
+moment = Moment(app)
 
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 app.config["status"] = "LOCAL"
+app.config["memberpasshost"] = "unknown"
 # app.config["status"] = "AZURE"
 
 if app.config["status"] == "LOCAL":
@@ -47,7 +54,9 @@ def inject_host_and_more():
 def index():
    return render_template("index.html")
 
-
+@app.route('/invite-memberpass')
+def invite_memberpass():
+  return render_template("invite-memberpass.html")
 
 @app.route('/invite-oob')
 def invite_oob():
@@ -83,6 +92,8 @@ def questions():
   # print(response)
   questions = response.json()
   return render_template("questions.html",questions=questions)
+
+
 
 
 
@@ -182,7 +193,54 @@ def sendcred(connectionid):
 
   return redirect(url_for('connections'))
 
+@app.route('/invite/qr-memberpass.png')
+def generateqrmemberpass():
+   # get the URL from the server for an invite.
+  payload = {
+    "my_label": app.config["fi-name"]
+  }
   
+  json_payload = json.dumps(payload)
+
+  #= "https://f331a436996c.ngrok.app"
+  # host = "http://4.157.130.159:11000"
+
+  host = app.config["memberpasshost"]
+
+  url = host + f"/connections/create-invitation"
+
+  response = requests.post(url, json=payload)
+  print(response)
+
+  jsonresponse = response.json()
+  # print(jsonresponse)
+
+  invitation_url = jsonresponse["invitation_url"]
+  print("invitation_url = " + invitation_url)
+
+ 
+  
+  # Generate a QR code
+  qr = qrcode.QRCode(
+      version=1,
+      error_correction=qrcode.constants.ERROR_CORRECT_L,
+      box_size=10,
+      border=4,
+  )
+
+  # Set the data
+  qr.add_data(invitation_url)
+
+  # Generate the QR code
+  qr.make(fit=True)
+
+  # Get the QR code as a PNG image
+  img = qr.make_image(fill_color="black", back_color="white")
+
+  byteIO = BytesIO()
+  img.save(byteIO, 'PNG')
+  byteIO.seek(0)
+  return send_file(byteIO, mimetype='image/png')
 
 @app.route('/invite/qr-connections.png')  # This is the homepage
 def generateqrconnection():

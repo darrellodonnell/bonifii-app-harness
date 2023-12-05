@@ -9,20 +9,18 @@
 {% for question in questions.results %}
 
 <tr>
-  <td>
-    {{question.thread_id}} <br/>- {{ question.connection_id}}
-  </td>
+  
   <td>{{question.created_at}} </td>
 
+  {% if question.state == "answered" %}
+  <td>{{question.updated_at}} <br/>answer: {{ question.response}} </td>
+  {% else %}
+  <td>- - -<br/>-not-answered-</td>
+  {% endif %}
   <td>
     {{ question.question_text}}<br/>{{question.question_detail}}
     <!-- <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">issue-credential</a> -->
   </td>
-  {% if question.state == "answered" %}
-  <td>answer: {{ question.response}} <br/> {{question.updated_at}} </td>
-  {% else %}
-  <td>-not-answered-</td>
-  {% endif %}
   <td>
     
     <a href="{{ url_for('deletequestion', threadid=question.thread_id) }}" class="btn btn-danger" role="button">REMOVE</a>

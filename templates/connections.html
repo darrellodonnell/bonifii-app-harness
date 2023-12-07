@@ -27,13 +27,8 @@
   {% else %}
   <td>{{connection.state}} </td>
   <td>{{connection.created_at}}</td>
-  <!-- 2023-12-01T15:52:35.558552Z -->
 
-  <td>
-    string:{{  connection.created_at }}<br/>
-    python:{{  connection.created_at|parse_date }}<br/>
 
-  </td>
   {% endif %}
   <td>
     <!-- <button id="delete-button" data-id="{{connection.connection_id}}" class="btn btn-danger" >DELETE</button> -->

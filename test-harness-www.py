@@ -82,10 +82,9 @@ def connections():
   connections = response.json()
   return render_template("connections.html",connections=connections)
 
-
 @app.route('/memberpasstest')
 def memberpasstest():
-  members = ["iOS1","iOS2","Android1","Android2"]  # test data
+  members = ["iOS-test1"]  # test data
   return render_template("memberpasstest.html",members=members)
 
 @app.route('/questions')
@@ -122,6 +121,38 @@ def deleteconnection(connectionid):
   print(response)
    # if successful
   return redirect(url_for('connections'))
+
+@app.route('/memberpass-simpleauthenticate/<memberId>')
+def simpleauthenticate(memberId):
+  headers = {'Content-Type': 'application/json',
+           # 'Prefer':'respond-async', #remove comment for async
+           'Authorization': 'Bearer ' + authtokens.oauth_token}
+  
+  question = {
+    "messageId": "42",
+    "messageQuestion": "Are you on the phone with _______?",
+    "messageTitle": "CU is asking you a question",
+    "messageText": "Our system needs to make sure that you are on the phone with one of our operators. We do this to protect you and your accounts at the credit union.",
+    "positiveOptionText": "Yes, it is me.",
+    "negativeOptionText": "No. I am NOT. That is not me.",
+    "expires": "2023-12-21T02:50:13.334Z"
+  }
+  print(question)
+  json_payload = json.dumps(question)
+  print(json_payload)
+
+
+  
+  onboardEndpoint ="{}member/{}/authenticateSimple".format(MEMBERPASS_URL, memberId)
+  print(onboardEndpoint)
+
+  response = requests.put(onboardEndpoint, data=json.dumps(question), headers=headers)
+  print("Invitation Response:")
+  print(response)
+  print("JSON:")
+  print(response.json())
+
+  return redirect(url_for('memberpasstest'))
 
 @app.route('/sendqa/<connectionid>')
 def sendqa(connectionid):

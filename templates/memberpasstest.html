@@ -17,20 +17,19 @@
     {{ memberId}} 
   </td>
   
-  {% if memberId == "iOS1" %}
+  
   <td>
     <a href="{{ url_for('invite_memberpass',memberId=memberId) }}" class="btn btn-primary" role="button">INVITE</a>
-    <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">send QA</a>
+
+    <a href="{{ url_for('simpleauthenticate',memberId=memberId) }}" class="btn btn-primary" role="button">send QA</a>
     <!-- <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">issue-credential</a> -->
     <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">Get Cred Proof</a>
   </td>
-  <td>CREATE INVITE...</td>
-  {% else %}
-  <td></td>
-  <td></td>
 
 
-  {% endif %}
+
+
+
   <td>
    
     <a href="" class="btn btn-danger disabled" role="button" aria-disabled="true">REMOVE</a>

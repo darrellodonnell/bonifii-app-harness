@@ -4,7 +4,7 @@
 
 MemberPass v0.3.1 /member/{memberid}/createInvitation  <hr/>
 
-# Create MemberPass Invitation
+
 
 <!-- <form>
   <div class="row mb-3 form-group">
@@ -14,6 +14,8 @@ MemberPass v0.3.1 /member/{memberid}/createInvitation  <hr/>
   </div>
 </form> -->
 
+<h4>memberID: {{memberId}}</h4>
+
 <button class="btn btn-primary" id="generateQR" type="button" class="btn">Get Invite QR</button>
 <hr/>
 <script>
@@ -21,7 +23,7 @@ MemberPass v0.3.1 /member/{memberid}/createInvitation  <hr/>
     $('#generateQR').click(function()
     {
       // alert("gonna do the thang");
-      $('#qrinvite').attr('src','/invite/qr-memberpass.png');
+      $('#qrinvite').attr('src','/invite/qr-memberpass.png?memberId={{memberId}}');
       // alert("just did the thang");
     });
   });

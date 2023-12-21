@@ -1,0 +1,13 @@
+version: "2"
+authtoken: 2YDljAsoqMwcrmWwK6eckcjCVEO_cAzv7Ke5MiUiXcdFA8VT
+tunnels:
+  api:
+    addr: 11000
+    proto: http    
+  didcomm:
+    addr: 8000
+    proto: http
+  webhook:
+    addr: 5000
+    proto: http
+    

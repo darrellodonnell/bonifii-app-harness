@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}INVITE{% endblock %}
+{% block content %}
+
+
+<h1>MemberPass Test</h1>
+
+
+
+<table width="100%">
+
+
+{% for memberId in members %}
+
+<tr>
+  <td>
+    {{ memberId}} 
+  </td>
+  
+  {% if memberId == "iOS1" %}
+  <td>
+    <a href="{{ url_for('invite_memberpass',memberId=memberId) }}" class="btn btn-primary" role="button">INVITE</a>
+    <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">send QA</a>
+    <!-- <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">issue-credential</a> -->
+    <a href="" class="btn btn-primary disabled" role="button" aria-disabled="true">Get Cred Proof</a>
+  </td>
+  <td>CREATE INVITE...</td>
+  {% else %}
+  <td></td>
+  <td></td>
+
+
+  {% endif %}
+  <td>
+   
+    <a href="" class="btn btn-danger disabled" role="button" aria-disabled="true">REMOVE</a>
+  </td>
+</tr>  
+
+{% endfor %}
+</table>
+
+<hr/>
+<pre><code>{{ members }}</code></pre>
+
+
+{% endblock %}

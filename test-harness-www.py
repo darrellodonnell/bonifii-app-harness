@@ -5,6 +5,8 @@ from io import BytesIO
 import json
 from flask_moment import Moment
 from jinja2 import Environment
+import memberpassoauth as authtokens # MemberPass OAuth token tooling
+import config 
 
 jinja_env = Environment(extensions=['jinja2_iso8601.ISO8601Extension'])
 
@@ -12,38 +14,36 @@ jinja_env = Environment(extensions=['jinja2_iso8601.ISO8601Extension'])
 app = Flask(__name__)
 moment = Moment(app)
 
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
-app.config["status"] = "LOCAL"
-app.config["memberpasshost"] = "unknown"
 # app.config["status"] = "AZURE"
 
-if app.config["status"] == "LOCAL":
-  app.config["acapyhost"] = "https://f331a436996c.ngrok.app"
-  app.config["agentDID"] = "X4eo8b2NLAvoFfgyuKKQzF"
-  app.config["creddef"] = "X4eo8b2NLAvoFfgyuKKQzF:3:CL:178678:tag1"
-  app.config["fi-name"] = "D-Local CU"
+run = "LOCAL"
+
+
+# MemberPass API specifics
+CLIENTID = config.API['CLIENTID']
+SECRET = config.API['SECRET']
+TENANTID = config.API['TENANTID']
+MEMBERPASS_URL = config.API['MEMBERPASS_URL']
+OAUTH_URL = config.API['OAUTH_URL']
+
+
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+
+app.config["status"] = "AZURE"
+app.config["memberpasshost"] = "unknown"
+
+# Merge the config.py values in...
+if run == "LOCAL":
+  app.config = app.config | config.local  
 else:
-  app.config["acapyhost"] = "http://4.157.130.159:11000"
-  app.config["agentDID"] = "Enn9uVvmfXTnSGWpk19Tju"
-  app.config["creddef"] = "Enn9uVvmfXTnSGWpk19Tju:3:CL:178678:tag1"
-  app.config["fi-name"] = "Bonifii Demo CU"
-
- 
-# 
+  app.config = app.config | config.azure
 
 
 
 
+print(app.config)
 
-
-
-# X4eo8b2NLAvoFfgyuKKQzF:3:CL:178678:tag1
-
-# app.config["acapyhost"] = "http://4.157.130.159:11000"
-# app.config["connectionlogo"] = "https://culedger.s3.amazonaws.com/MemberPass512x512.png"
-
-#TODO: Move to use config file with LOCAL/REMOTE API endpoints
 
 @app.context_processor
 def inject_host_and_more():
@@ -52,11 +52,11 @@ def inject_host_and_more():
 
 @app.route('/')
 def index():
-   return render_template("index.html")
+  return render_template("index.html")
 
-@app.route('/invite-memberpass')
-def invite_memberpass():
-  return render_template("invite-memberpass.html")
+@app.route('/invite-memberpass/<memberId>')
+def invite_memberpass(memberId):
+  return render_template("invite-memberpass.html", memberId=memberId)
 
 @app.route('/invite-oob')
 def invite_oob():
@@ -82,6 +82,11 @@ def connections():
   connections = response.json()
   return render_template("connections.html",connections=connections)
 
+
+@app.route('/memberpasstest')
+def memberpasstest():
+  members = ["iOS1","iOS2","Android1","Android2"]  # test data
+  return render_template("memberpasstest.html",members=members)
 
 @app.route('/questions')
 def questions():
@@ -151,7 +156,7 @@ def sendcred(connectionid):
       "attributes": [
         {
           "name": "Institution",
-          "value": app.config["fi-name"]
+          "value": app.config["finame"]
         },
         {
           "name": "CredentialName",
@@ -195,31 +200,45 @@ def sendcred(connectionid):
 
 @app.route('/invite/qr-memberpass.png')
 def generateqrmemberpass():
-   # get the URL from the server for an invite.
-  payload = {
-    "my_label": app.config["fi-name"]
+
+  headers = {'Content-Type': 'application/json',
+           # 'Prefer':'respond-async', #remove comment for async
+           'Authorization': 'Bearer ' + authtokens.oauth_token}
+
+  # memberId passed as URL Parameter (e.g. ".../invite/qr-memberpass.png?memberId=1234")
+  memberId = request.args.get('memberId')
+  print("memberId passed as: " + memberId)
+
+  payload = {"memberId": memberId,
+    "phoneNumber": "5555551212",
+    "emailAddress": "bubba@mailnesia.com",
+    "displayTextFromFI": "Let's get connected via MemberPass!",
+    "credentialData": {
+        "CredentialId": "--",
+        "CredentialDescription": "--",
+        "Institution": "--",
+        "CredentialName": "--",
+        "MemberNumber": memberId,
+        "MemberSince": "--"
+    }
   }
   
-  json_payload = json.dumps(payload)
-
-  #= "https://f331a436996c.ngrok.app"
-  # host = "http://4.157.130.159:11000"
-
-  host = app.config["memberpasshost"]
-
-  url = host + f"/connections/create-invitation"
-
-  response = requests.post(url, json=payload)
+  onboardEndpoint ="{}member/{}/createInvitation".format(MEMBERPASS_URL, memberId)
+  print(onboardEndpoint)
+  response = requests.post(onboardEndpoint, data=json.dumps(payload), headers=headers)
+  print("Invitation Response:")
   print(response)
+  print("JSON:")
+  print(response.json())
+
+
 
   jsonresponse = response.json()
   # print(jsonresponse)
 
-  invitation_url = jsonresponse["invitation_url"]
+  invitation_url = jsonresponse["invitationUrl"]
   print("invitation_url = " + invitation_url)
-
  
-  
   # Generate a QR code
   qr = qrcode.QRCode(
       version=1,
@@ -230,12 +249,8 @@ def generateqrmemberpass():
 
   # Set the data
   qr.add_data(invitation_url)
-
-  # Generate the QR code
-  qr.make(fit=True)
-
-  # Get the QR code as a PNG image
-  img = qr.make_image(fill_color="black", back_color="white")
+  qr.make(fit=True) # Generate the QR code
+  img = qr.make_image(fill_color="black", back_color="white") # Get the QR code as a PNG image
 
   byteIO = BytesIO()
   img.save(byteIO, 'PNG')
@@ -246,7 +261,7 @@ def generateqrmemberpass():
 def generateqrconnection():
    # get the URL from the server for an invite.
   payload = {
-    "my_label": app.config["fi-name"]
+    "my_label": app.config["finame"]
   }
   
   json_payload = json.dumps(payload)
@@ -266,9 +281,6 @@ def generateqrconnection():
 
   invitation_url = jsonresponse["invitation_url"]
   print("invitation_url = " + invitation_url)
-
- 
-  
   # Generate a QR code
   qr = qrcode.QRCode(
       version=1,
@@ -276,10 +288,8 @@ def generateqrconnection():
       box_size=10,
       border=4,
   )
-
   # Set the data
   qr.add_data(invitation_url)
-
   # Generate the QR code
   qr.make(fit=True)
 
@@ -299,14 +309,14 @@ def generateqroob():
       "handshake_protocols":
         ["did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0"],
       "metadata": {},
-      "my_label": app.config["fi-name"] 
+      "my_label": app.config["finame"] 
   }
 
 
   # print(payload + "\n")
 
   json_payload = json.dumps(payload)
-  print(json_payload)
+  print("SENDING: \n" + json_payload)
 
 
   #= "https://f331a436996c.ngrok.app"
@@ -317,11 +327,12 @@ def generateqroob():
   url = host + f"/out-of-band/create-invitation"
 
   response = requests.post(url, json=payload)
-  print(response)
+  # print(response)
 
   jsonresponse = response.json()
-  # print(jsonresponse)
+  print("FULL JSON received:" )
 
+  print(jsonresponse)
   invitation_url = jsonresponse["invitation_url"]
   print("invitation_url = " + invitation_url)
   

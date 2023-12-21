@@ -7,7 +7,7 @@ import sys
 # TODO:
 
 # test OOB invitation object(JSON object)
-# test OOV invitation_url object
+# test OOB invitation_url object
 
 
 # DO NOT ALLOW re-use (spam; security risk; etc.)
